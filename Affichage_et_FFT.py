@@ -14,12 +14,12 @@ from scipy.signal import butter, sosfilt
 
 
 if not QtWidgets.QApplication.instance():
-    app = QtWidgets.QApplication()
+    app = QtWidgets.QApplication([])
 else:
     app = QtWidgets.QApplication.instance()
 
 
-pg.setConfigOption('background', 'w')
+pg.setConfigOption("background", "w")
 
 
 class MyApp(QtWidgets.QMainWindow):
@@ -47,9 +47,11 @@ class MyApp(QtWidgets.QMainWindow):
         btn7 = QtWidgets.QPushButton("Sélectionner données")
         btn8 = QtWidgets.QPushButton("Annuler sélection")
         btn9 = QtWidgets.QPushButton("Utiliser données filtrées")
-        self.fd = QtWidgets.QFileDialog(filter='*.txt')
-        self.lbl1 = QtWidgets.QLabel("Fréquence d'échantillonage = {} Hz".format(0))
-        self.lbl2 = QtWidgets.QLabel("Frequence de résonance = {} Hz".format(0))
+        self.fd = QtWidgets.QFileDialog(filter="*.txt")
+        self.lbl1 = QtWidgets.QLabel("Fréquence d'échantillonage = {} Hz"
+                                     .format(0))
+        self.lbl2 = QtWidgets.QLabel("Frequence de résonance = {} Hz"
+                                     .format(0))
         lbl3 = QtWidgets.QLabel("Ordre du filtre")
         self.cb1 = QtWidgets.QComboBox()
         self.cb1.addItems(["2", "3", "4", "5", "6", "7", "8", "9", "10"])
@@ -66,10 +68,10 @@ class MyApp(QtWidgets.QMainWindow):
         # Creation du graph d'affichage de la courbe temps-déplacement
         self.pw1 = pg.PlotWidget(title="Temps-Déplacement")
         self.pw1.getPlotItem().showGrid(x=True, y=True)
-        self.pw1.getPlotItem().getAxis('bottom').setPen('k')
-        self.pw1.getPlotItem().getAxis('left').setPen('k')
-        self.pw1.getPlotItem().setLabel('bottom', "Temps", "s")
-        self.pw1.getPlotItem().setLabel('left', "Déplacemen", "nm")
+        self.pw1.getPlotItem().getAxis("bottom").setPen("k")
+        self.pw1.getPlotItem().getAxis("left").setPen("k")
+        self.pw1.getPlotItem().setLabel("bottom", "Temps", "s")
+        self.pw1.getPlotItem().setLabel("left", "Déplacemen", "nm")
         self.unfilteredPlot = self.pw1.getPlotItem().plot()
         self.filteredPlot = self.pw1.getPlotItem().plot()
         self.filteredPlot.setPen("g")
@@ -78,15 +80,15 @@ class MyApp(QtWidgets.QMainWindow):
         # Creation du graph d'affichage de la courbe de FFT
         self.pw2 = pg.PlotWidget(title="FFT")
         self.pw2.getPlotItem().showGrid(x=True, y=True)
-        self.pw2.getPlotItem().getAxis('bottom').setPen('k')
-        self.pw2.getPlotItem().getAxis('left').setPen('k')
+        self.pw2.getPlotItem().getAxis("bottom").setPen("k")
+        self.pw2.getPlotItem().getAxis("left").setPen("k")
         self.pw2.setRange(xRange=(0, 500), yRange=(0, 1.1))
         self.lr2 = pg.LinearRegionItem()
         self.lr2.setBounds((0, 500))
         self.il1 = pg.InfiniteLine()
-        self.il1.setPen('g', width=2)
+        self.il1.setPen("g", width=2)
         self.il2 = pg.InfiniteLine()
-        self.il2.setPen('k')
+        self.il2.setPen("k")
         # Insertion des fonction sur le layout
         mainLayout.addWidget(self.nomFichier, 0, 0, 1, 4)
         mainLayout.addWidget(self.pw1, 1, 0, 6, 4)
@@ -122,32 +124,39 @@ class MyApp(QtWidgets.QMainWindow):
         btn8.clicked.connect(self.ClearSelectData)
         btn9.clicked.connect(self.UseFilteredData)
         # Autres interactions
-        self.sb1.valueChanged.connect(lambda: self.UpdateLinearRegion(self.lr2,
-                                                                      self.sb1.value(),
-                                                                      self.sb2.value()))
-        self.sb2.valueChanged.connect(lambda: self.UpdateLinearRegion(self.lr2,
-                                                                      self.sb1.value(),
-                                                                      self.sb2.value()))
-        self.lr2.sigRegionChanged.connect(lambda: self.UpdateSpinBox(self.sb1,
-                                                                     self.lr2.getRegion()[0]))
-        self.lr2.sigRegionChanged.connect(lambda: self.UpdateSpinBox(self.sb2,
-                                                                     self.lr2.getRegion()[1]))
+        self.sb1.valueChanged.connect(
+            lambda: self.UpdateLinearRegion(
+                self.lr2, self.sb1.value(), self.sb2.value()
+            )
+        )
+        self.sb2.valueChanged.connect(
+            lambda: self.UpdateLinearRegion(
+                self.lr2, self.sb1.value(), self.sb2.value()
+            )
+        )
+        self.lr2.sigRegionChanged.connect(
+            lambda: self.UpdateSpinBox(self.sb1, self.lr2.getRegion()[0])
+        )
+        self.lr2.sigRegionChanged.connect(
+            lambda: self.UpdateSpinBox(self.sb2, self.lr2.getRegion()[1])
+        )
 
     def OpenFile(self):
         """
         Permet de choisir un fichier, de l'ouvrir
         """
-        global data
         self.HideLinearRegion(self.pw1, self.lr1)
         """Permet de choisir le fichier à ouvrir"""
-        self.fd.setDirectory('W:/R-D/18R047_OOSSI/Création_édition_logiciels/Python/Ressources/')
-        self.fileName = self.fd.getOpenFileName(filter='*.txt')[0]
+        self.fd.setDirectory(
+            "W:/R-D/18R047_OOSSI/Création_édition_logiciels/Python/Ressources/"
+        )
+        self.fileName = self.fd.getOpenFileName(filter="*.txt")[0]
         self.nomFichier.setText(self.fileName.split("/").pop())
         self.dataInit, self.freq = ImporterDonnees(self.fileName)
         self.data = np.copy(self.dataInit)
         self.unfilteredPlot.setData(self.data, name="Données brutes")
         self.lr1.setBounds((self.data[:, 0].min(), self.data[:, 0].max()))
-        self.lr1.setRegion(np.array([0.25, 0.75])*self.data[:, 0].max())
+        self.lr1.setRegion(np.array([0.25, 0.75]) * self.data[:, 0].max())
         self.filteredPlot.clear()
         self.PerformFFT()
 
@@ -162,22 +171,26 @@ class MyApp(QtWidgets.QMainWindow):
         self.pw2.clear()
         self.pw2.addItem(self.lr2)
         freq_FFT, spectre_FFT = Calculer_FFT(self.data[:, 1], self.freq)
-        self.pw2.plot(freq_FFT, spectre_FFT, pen='r')
+        self.pw2.plot(freq_FFT, spectre_FFT, pen="r")
         freq_res = freq_FFT[spectre_FFT.argmax()]
-        self.lbl2.setText("Frequence de résonance = {} Hz".format(round(freq_res, 2)))
-        self.lbl1.setText("Fréquence d'échantillonage = {} Hz".format(int(self.freq)))
+        self.lbl2.setText("Frequence de résonance = {} Hz".
+                          format(round(freq_res, 2)))
+        self.lbl1.setText("Fréquence d'échantillonage = {} Hz".
+                          format(int(self.freq)))
         self.lr2.setRegion((self.sb1.value(), self.sb2.value()))
         self.sb2.setMaximum(freq_FFT.max())
         self.sb1.setMaximum(freq_FFT.max())
 
     def PerformFilter(self):
         if self.data is not None:
-            filtered_data = Filtrer_Data(self.data[:, 1],
-                                         self.freq,
-                                         lowcut=self.sb1.value(),
-                                         highcut=self.sb2.value(),
-                                         order=int(self.cb1.currentText()),
-                                         btype = self.cb2.currentText())
+            filtered_data = Filtrer_Data(
+                self.data[:, 1],
+                self.freq,
+                lowcut=self.sb1.value(),
+                highcut=self.sb2.value(),
+                order=int(self.cb1.currentText()),
+                btype=self.cb2.currentText(),
+            )
             self.filtered_data = np.column_stack((self.data[:, 0],
                                                   filtered_data))
             self.filteredPlot.setData(self.filtered_data,
@@ -208,7 +221,7 @@ class MyApp(QtWidgets.QMainWindow):
         if self.data is not None:
             self.filteredPlot.clear()
             index = RechercheIndex(self.lr1.getRegion(), self.data[:, 0])
-            self.data = self.data[index[0]:index[1], :]
+            self.data = self.data[index[0]: index[1], :]
             self.unfilteredPlot.setData(self.data)
             self.lr1.setBounds((self.data[:, 0].min(), self.data[:, 0].max()))
             self.PerformFFT()
@@ -228,6 +241,7 @@ class MyApp(QtWidgets.QMainWindow):
         self.unfilteredPlot.setData(self.data)
         self.PerformFFT()
 
+
 # =============================================================================
 # Fonction intermédiaires
 # =============================================================================
@@ -245,19 +259,19 @@ def ImporterDonnees(fileName):
         Tableau [temps, déplacement]
     frequence : int
         Frequence echantillonage"""
-#    global frequence, tps, dep
+    #    global frequence, tps, dep
     dep = np.loadtxt(fileName)
     fileParams = fileName.split(".")[:-1][0]
     with open("{}_param.txt".format(fileParams), "r") as fichier:
         content = fichier.read()
     tab = content.split("\n")
     frequence = int(tab[1].split(": ")[-1])
-    tps = np.linspace(0, len(dep)-1, len(dep))*1/frequence
+    tps = np.linspace(0, len(dep) - 1, len(dep)) * 1 / frequence
     out = np.column_stack((tps, dep))
     return out, frequence
 
 
-def Filtrer_Data(data, fs, lowcut=0, highcut=0, order=2, btype='lowpass'):
+def Filtrer_Data(data, fs, lowcut=0, highcut=0, order=2, btype="lowpass"):
     """
     Applique un filtre de butterworth sur les données.\n
     Parameters
@@ -279,11 +293,9 @@ def Filtrer_Data(data, fs, lowcut=0, highcut=0, order=2, btype='lowpass'):
     filtered_data : 1dArray
         Tabelau des données filtrées
     """
-    sos = Calculer_Parametres_Butter(fs,
-                                     lowcut=lowcut,
-                                     highcut=highcut,
-                                     order=order,
-                                     btype=btype)
+    sos = Calculer_Parametres_Butter(
+        fs, lowcut=lowcut, highcut=highcut, order=order, btype=btype
+    )
     filtered_data = sosfilt(sos, data)
     return filtered_data
 
@@ -309,7 +321,7 @@ def Calculer_Parametres_Butter(fs, lowcut=1e-9, highcut=1e9, order=2,
     sos : ndarray
         Parametre du filtre IR.
     """
-    nyq = fs/2
+    nyq = fs / 2
     low = lowcut / nyq
     high = highcut / nyq
     if btype == "lowpass":
@@ -318,7 +330,7 @@ def Calculer_Parametres_Butter(fs, lowcut=1e-9, highcut=1e9, order=2,
         Wn = low
     else:
         Wn = [low, high]
-    sos = butter(order, Wn, btype=btype, output='sos')
+    sos = butter(order, Wn, btype=btype, output="sos")
     return sos
 
 
@@ -337,9 +349,9 @@ def Calculer_FFT(data, frequence):
     freq_FFT : ndarray
         Tableau de fréquences associées au spectre FFT
     """
-    sample = len(data)//2
-    spectre = abs(np.fft.fft(data)/np.fft.fft(data).max()).real[:sample]
-    freq_FFT = np.fft.fftfreq(len(data), 1/frequence)[:sample]
+    sample = len(data) // 2
+    spectre = abs(np.fft.fft(data) / np.fft.fft(data).max()).real[:sample]
+    freq_FFT = np.fft.fftfreq(len(data), 1 / frequence)[:sample]
     return freq_FFT, spectre
 
 
@@ -349,7 +361,8 @@ def RechercheIndex(tabValeurs, tabRecherche):
     Parameters
     -----------
     tabValeurs : ndarray
-        Tableau 1D contenant les valeurs dont les indexs doivent être déterminées
+        Tableau 1D contenant les valeurs dont les indexs doivent être
+        déterminées
     tabRecherche : ndarray
         Tableau 1D du tableau dans lequel doit être cherchés les indexs
     Return
@@ -366,14 +379,14 @@ def RechercheIndex(tabValeurs, tabRecherche):
 # =============================================================================
 # Execution programme
 # =============================================================================
-if __name__ == '__main__':
+if __name__ == "__main__":
     screen = MyApp()
     screen.show()
     app.exec_()
 
 
 app.quit()
-#if __name__ == "__main__":
+# if __name__ == "__main__":
 #    myApp = MyApp()
 #    myApp.show()
 #    app.exec_()
